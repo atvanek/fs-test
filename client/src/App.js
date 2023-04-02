@@ -1,11 +1,13 @@
 import logo from './logo.svg';
 import './App.css';
 import React from 'react';
+import Board from './components/Board';
 
 function App() {
 	const [current, setCurrent] = React.useState('');
 	return (
 		<div className='App'>
+			<Board />
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
