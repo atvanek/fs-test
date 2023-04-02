@@ -15,7 +15,6 @@ function Board() {
 		const coordinates = {};
 		const lettersGrid = [];
 		let id = 1;
-
 		for (let i = 0; i < 4; i++) {
 			const letters = [];
 			for (let j = 0; j < 4; j++) {
@@ -33,8 +32,6 @@ function Board() {
 	function calculatePossibleMoves(coordinates) {
 		const x = coordinates[0];
 		const y = coordinates[1];
-
-		//check all surrounding squares
 		const adjacent = new Set();
 		for (let i = x - 1; i < x + 2; i++) {
 			if (i >= 0 && i <= 3) {
@@ -49,7 +46,6 @@ function Board() {
 			newSet.add(String(coordinates));
 			return newSet;
 		});
-		console.log(adjacent);
 		setPossibleMoves(adjacent);
 	}
 
@@ -88,6 +84,40 @@ function Board() {
 		// - calculatePossibleMoves is invoked
 	}
 
+	function clearBoard() {
+		setWordStarted(false);
+		setCurrentCube([]);
+		setPossibleMoves(new Set());
+		setSelectedBoxes(new Set());
+		setCurrentWord('');
+		document
+			.querySelectorAll('.box')
+			.forEach((node) => node.classList.remove('selected'));
+	}
+
+	function validateWord(e) {
+		if (currentWord.length < 3) {
+			window.alert('word must be at least 3 letters');
+			return;
+		}
+		//also check if word is already in submittedWords list
+		e.preventDefault();
+		fetch('/testWord', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ word: currentWord.toLowerCase() }),
+		})
+			.then((res) => res.json())
+			.then((data) => {
+				const { word } = data;
+				console.log(word);
+				if (word === 'valid') {
+					setScore((prev) => prev + 1);
+				}
+				clearBoard();
+			});
+	}
+
 	React.useEffect(() => {
 		populateBoard();
 	}, []);
@@ -108,45 +138,12 @@ function Board() {
 				{rows}
 			</main>
 			<div id='score'>{score}</div>
-			<button
-				onClick={(e) => {
-					e.preventDefault();
-					fetch('/testWord', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ word: currentWord.toLowerCase() }),
-					})
-						.then((res) => res.json())
-						.then((data) => {
-							const { word } = data;
-							console.log(word);
-							if (word === 'valid') {
-								setScore((prev) => prev + 1);
-							}
-							setWordStarted(false);
-							setCurrentCube([]);
-							setPossibleMoves(new Set());
-							setSelectedBoxes(new Set());
-							setCurrentWord('');
-							document
-								.querySelectorAll('.box')
-								.forEach((node) => node.classList.remove('selected'));
-						});
-				}}>
-				Validate word
-			</button>
+			<button onClick={validateWord}>Validate word</button>
 
 			<button
 				onClick={() => {
 					console.log(currentWord);
-					setWordStarted(false);
-					setCurrentCube([]);
-					setPossibleMoves(new Set());
-					setSelectedBoxes(new Set());
-					setCurrentWord('');
-					document
-						.querySelectorAll('.box')
-						.forEach((node) => node.classList.remove('selected'));
+					clearBoard();
 				}}>
 				Reset Word
 			</button>
