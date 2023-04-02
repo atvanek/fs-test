@@ -6,6 +6,7 @@ function Board() {
 	const [wordStarted, setWordStarted] = React.useState(false);
 	const [selectedBoxes, setSelectedBoxes] = React.useState(new Set());
 	const [possibleMoves, setPossibleMoves] = React.useState(new Set());
+	const [currentWord, setCurrentWord] = React.useState('');
 	const [currentCube, setCurrentCube] = React.useState('');
 	const [score, setScore] = React.useState(0);
 	const [boxCoords, setBoxCoords] = React.useState({});
@@ -55,18 +56,23 @@ function Board() {
 	function handleBoxClick(e) {
 		const coordinates = boxCoords[e.target.id];
 		if (selectedBoxes.has(String(coordinates))) {
-			console.log('please select new box');
+			window.alert('please select new box');
 			return;
 		}
 		if (wordStarted && !possibleMoves.has(String(coordinates))) {
-			console.log('please select adjacent box');
+			window.alert('please select adjacent box');
 			return;
 		}
 
 		if (selectedBoxes.size === 0) {
 			setWordStarted(true);
 		}
+		console.log(e.target.innerText);
 		calculatePossibleMoves(coordinates);
+		setCurrentWord((prev) => {
+			const newWord = prev + e.target.innerText;
+			return newWord;
+		});
 		// setSelectedBoxes((prev) => [...prev, [coordinates]]);
 		e.target.classList.add('selected');
 
@@ -103,10 +109,41 @@ function Board() {
 			</main>
 			<div id='score'>{score}</div>
 			<button
+				onClick={(e) => {
+					e.preventDefault();
+					fetch('/testWord', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ word: currentWord.toLowerCase() }),
+					})
+						.then((res) => res.json())
+						.then((data) => {
+							const { word } = data;
+							console.log(word);
+							if (word === 'valid') {
+								setScore((prev) => prev + 1);
+							}
+							setWordStarted(false);
+							setCurrentCube([]);
+							setPossibleMoves(new Set());
+							setSelectedBoxes(new Set());
+							setCurrentWord('');
+							document
+								.querySelectorAll('.box')
+								.forEach((node) => node.classList.remove('selected'));
+						});
+				}}>
+				Validate word
+			</button>
+
+			<button
 				onClick={() => {
+					console.log(currentWord);
 					setWordStarted(false);
 					setCurrentCube([]);
 					setPossibleMoves(new Set());
+					setSelectedBoxes(new Set());
+					setCurrentWord('');
 					document
 						.querySelectorAll('.box')
 						.forEach((node) => node.classList.remove('selected'));
