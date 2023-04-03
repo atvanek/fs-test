@@ -31,6 +31,17 @@ app.use('/testWord', (req, res) => {
 		});
 });
 
+const allMessages = [];
+app.post('/message', (req, res) => {
+	console.log('received');
+	const { message } = req.body;
+	console.log(req.body);
+	allMessages.push(message);
+	res.json(allMessages);
+});
+
+app.get('/message');
+
 app.listen(PORT, () => {
 	console.log(`Listening on port ${PORT}...`);
 });

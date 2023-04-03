@@ -7,9 +7,10 @@ function Board() {
 	const [selectedBoxes, setSelectedBoxes] = React.useState(new Set());
 	const [possibleMoves, setPossibleMoves] = React.useState(new Set());
 	const [currentWord, setCurrentWord] = React.useState('');
-	const [currentCube, setCurrentCube] = React.useState('');
 	const [score, setScore] = React.useState(0);
 	const [boxCoords, setBoxCoords] = React.useState({});
+	const [playedWords, setPlayedWords] = React.useState(new Set());
+	const [playerMessages, setPlayerMessages] = React.useState([]);
 
 	function populateBoard() {
 		const coordinates = {};
@@ -86,7 +87,6 @@ function Board() {
 
 	function clearBoard() {
 		setWordStarted(false);
-		setCurrentCube([]);
 		setPossibleMoves(new Set());
 		setSelectedBoxes(new Set());
 		setCurrentWord('');
@@ -98,6 +98,11 @@ function Board() {
 	function validateWord(e) {
 		if (currentWord.length < 3) {
 			window.alert('word must be at least 3 letters');
+			return;
+		}
+
+		if (playedWords.has(currentWord)) {
+			window.alert('word has already been played. Please choose new word.');
 			return;
 		}
 		//also check if word is already in submittedWords list
@@ -113,6 +118,9 @@ function Board() {
 				console.log(word);
 				if (word === 'valid') {
 					setScore((prev) => prev + 1);
+					setPlayedWords((prev) => new Set(prev).add(currentWord));
+				} else {
+					window.alert(`${currentWord} is not a word`);
 				}
 				clearBoard();
 			});
@@ -138,6 +146,9 @@ function Board() {
 				{rows}
 			</main>
 			<div id='score'>{score}</div>
+			{[...playedWords].map((word) => (
+				<p>{word}</p>
+			))}
 			<button onClick={validateWord}>Validate word</button>
 
 			<button
@@ -147,6 +158,28 @@ function Board() {
 				}}>
 				Reset Word
 			</button>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					console.log(e.target[0].value);
+					fetch('/message', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({ message: e.target[0].value }),
+					})
+						.then((res) => res.json())
+						.then((data) => {
+							setPlayerMessages(data);
+						});
+				}}>
+				<input type='text' />
+				<button type='submit'>Send Message</button>
+			</form>
+			{playerMessages.map((message) => (
+				<p>{message}</p>
+			))}
 		</>
 	);
 }
